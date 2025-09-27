@@ -1,0 +1,44 @@
+# --- Python / Django ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+staticfiles/
+media/
+
+# virtual envs
+.venv/
+venv/
+ENV/
+
+# Django/Celery runtime
+backend/celerybeat-schedule*
+backend/celerybeat.pid
+
+# --- Node / Vite ---
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# --- Envs & secrets ---
+*.env
+*.env.*
+backend/.env
+frontend/.env
+
+# --- Editors/OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+*.pid
