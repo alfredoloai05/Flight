@@ -42,7 +42,17 @@ async function request(path: string, opts: RequestInit = {}) {
     const text = await res.text();
     try {
       const j = JSON.parse(text);
-      throw new Error(j.detail ?? JSON.stringify(j));
+      // Formato de errores de DRF puede ser {field: ["msg"]}
+      if (j && typeof j === 'object' && !Array.isArray(j)) {
+        if (j.detail) throw new Error(String(j.detail));
+        const parts: string[] = [];
+        for (const k of Object.keys(j)) {
+          const v = Array.isArray(j[k]) ? j[k].join(', ') : String(j[k]);
+          parts.push(`${k}: ${v}`);
+        }
+        throw new Error(parts.join(' | '));
+      }
+      throw new Error(JSON.stringify(j));
     } catch {
       throw new Error(text || `${res.status} ${res.statusText}`);
     }

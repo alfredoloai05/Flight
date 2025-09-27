@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FlightRequest } from "./api";
 import { listRequests } from "./api";
+import { Box, Typography, ToggleButtonGroup, ToggleButton, Card, CardContent, Chip } from "@mui/material";
 
 export default function MyRequestsPage() {
   const [items, setItems] = useState<FlightRequest[]>([]);
@@ -12,29 +13,30 @@ export default function MyRequestsPage() {
   }, [filter]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">Mis Solicitudes</h1>
-      <div className="mb-3">
-        <select className="border p-2" value={filter} onChange={e=>setFilter(e.target.value as any)}>
-          <option value="ALL">Todas</option>
-          <option value="PENDING">Pendientes</option>
-          <option value="RESERVED">Reservadas</option>
-        </select>
-      </div>
-      <div className="space-y-2">
+    <Box>
+      <Typography variant="h5" fontWeight={600} gutterBottom>Mis Solicitudes</Typography>
+      <ToggleButtonGroup exclusive size="small" value={filter} onChange={(_, v)=> v && setFilter(v)} sx={{ mb: 2 }}>
+        <ToggleButton value="ALL">Todas</ToggleButton>
+        <ToggleButton value="PENDING">Pendientes</ToggleButton>
+        <ToggleButton value="RESERVED">Reservadas</ToggleButton>
+      </ToggleButtonGroup>
+      <Box display="grid" gap={2}>
         {items.map(r => (
-          <div key={r.id} className="border rounded p-3">
-            <div className="text-sm text-gray-600">#{r.id} · {r.status}</div>
-            <div className="font-medium">
-              {r.origin.iata_code} → {r.destination.iata_code} · {r.travel_date}
-              {r.return_date ? ` · regreso ${r.return_date}` : ""}
-            </div>
-            <div className="text-xs text-gray-500">Creado: {new Date(r.created_at).toLocaleString()}</div>
-          </div>
+          <Card key={r.id} variant="outlined">
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                <Typography variant="body2" color="text.secondary">#{r.id}</Typography>
+                <Chip size="small" label={r.status} color={r.status === 'RESERVED' ? 'success' : 'warning'} />
+              </Box>
+              <Typography fontWeight={600}>{r.origin.iata_code} → {r.destination.iata_code}</Typography>
+              <Typography variant="body2">Ida: {r.travel_date}{r.return_date ? ` · Regreso: ${r.return_date}` : ''}</Typography>
+              <Typography variant="caption" color="text.secondary">Creado: {new Date(r.created_at).toLocaleString()}</Typography>
+            </CardContent>
+          </Card>
         ))}
-        {items.length === 0 && <p className="text-sm text-gray-600">Sin resultados.</p>}
-      </div>
-    </div>
+        {items.length === 0 && <Typography variant="body2" color="text.secondary">Sin resultados.</Typography>}
+      </Box>
+    </Box>
   );
 }
 

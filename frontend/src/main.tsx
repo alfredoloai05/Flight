@@ -10,6 +10,10 @@ import NewRequestPage from "./modules/flights/NewRequestPage";
 import MyRequestsPage from "./modules/flights/MyRequestsPage";
 import RequestDetailPage from "./modules/flights/RequestDetailPage";
 import OperatorPendingPage from "./modules/operator/OperatorPendingPage";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import { theme } from "./theme";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
@@ -28,8 +32,13 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

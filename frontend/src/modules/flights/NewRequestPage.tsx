@@ -1,79 +1,46 @@
 import { useEffect, useMemo, useState } from "react";
 import { listDestinations, type Destination } from "../destinations/api";
 import { createRequest, getAvailabilityDates } from "./api";
+import {
+  Box,
+  Typography,
+  Alert,
+  Button,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  TextField,
+  Stack,
+  Snackbar,
+} from "@mui/material";
+import { DateCalendar, PickersDay } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
 
-function pad(n: number) { return n.toString().padStart(2, "0"); }
-function daysInMonth(year: number, month: number) { return new Date(year, month, 0).getDate(); }
-
-function MonthGrid({
-  ym, available, value, onChange, label,
-}: {
-  ym: string;
-  available: Set<string>;
-  value: string | null;
-  onChange: (d: string) => void;
-  label: string;
-}) {
-  const [year, month] = ym.split("-").map(Number);
-  const total = daysInMonth(year, month);
-  const first = new Date(year, month - 1, 1).getDay();
-  const cells: Array<{ day: number | null; dateStr: string | null; enabled: boolean }> = [];
-  for (let i = 0; i < first; i++) cells.push({ day: null, dateStr: null, enabled: false });
-  for (let d = 1; d <= total; d++) {
-    const ds = `${year}-${pad(month)}-${pad(d)}`;
-    cells.push({ day: d, dateStr: ds, enabled: available.has(ds) });
-  }
-  while (cells.length % 7 !== 0) cells.push({ day: null, dateStr: null, enabled: false });
-
-  return (
-    <div>
-      <div className="font-medium mb-2">{label} ({ym})</div>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-600 mb-1">
-        {["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"].map(h => <div key={h}>{h}</div>)}
-      </div>
-      <div className="grid grid-cols-7 gap-1">
-        {cells.map((c, i) => {
-          if (!c.day) return <div key={i} className="h-9 border rounded bg-gray-50" />;
-          const selected = value === c.dateStr;
-          const cls = [
-            "h-9 flex items-center justify-center rounded border",
-            c.enabled ? "cursor-pointer hover:bg-gray-100" : "opacity-30 bg-gray-50",
-            selected ? "ring-2 ring-blue-600 border-blue-600" : ""
-          ].join(" ");
-          return (
-            <button
-              key={i}
-              type="button"
-              className={cls}
-              disabled={!c.enabled}
-              onClick={() => c.dateStr && onChange(c.dateStr)}
-              aria-pressed={selected}
-            >
-              {c.day}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+function ymToBounds(ym: string) {
+  const [y, m] = ym.split("-").map(Number);
+  const start = dayjs(`${y}-${String(m).padStart(2, "0")}-01`);
+  const end = start.endOf("month");
+  return { start, end };
 }
 
 export default function NewRequestPage() {
   const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [originId, setOriginId] = useState<number | null>(null);
-  const [destId, setDestId] = useState<number | null>(null);
+  const [originId, setOriginId] = useState<number | "" | null>(null);
+  const [destId, setDestId] = useState<number | "" | null>(null);
 
   const originIata = useMemo(() => destinations.find(d => d.id === originId)?.iata_code || "", [destinations, originId]);
   const destIata = useMemo(() => destinations.find(d => d.id === destId)?.iata_code || "", [destinations, destId]);
 
-  const [ym, setYm] = useState("2025-09"); // seed de demo
+  const [ym, setYm] = useState("2025-09");
 
   const [goAvail, setGoAvail] = useState<Set<string>>(new Set());
   const [backAvail, setBackAvail] = useState<Set<string>>(new Set());
-  const [goDate, setGoDate] = useState<string | null>(null);
-  const [backDate, setBackDate] = useState<string | null>(null);
+  const [goDate, setGoDate] = useState<Dayjs | null>(null);
+  const [backDate, setBackDate] = useState<Dayjs | null>(null);
 
   const [msg, setMsg] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
   const [loading, setL] = useState(false);
 
   useEffect(() => {
@@ -92,21 +59,34 @@ export default function NewRequestPage() {
     })().catch(console.error);
   }, [originIata, destIata, ym]);
 
+  function isEnabled(avail: Set<string>, d: Dayjs | null, mode: 'go' | 'back') {
+    if (!d) return false;
+    const ds = d.format("YYYY-MM-DD");
+    if (!avail.has(ds)) return false;
+    const today = dayjs().startOf('day');
+    if (mode === 'go') {
+      return d.isAfter(today, 'day');
+    }
+    // back: debe ser posterior a la ida (si existe)
+    if (goDate) return d.isAfter(goDate, 'day');
+    return true;
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMsg(null);
+    setMsg(null); setOk(null);
     if (!originId || !destId) return setMsg("Selecciona origen y destino.");
-    if (!goDate) return setMsg("Selecciona fecha de ida disponible.");
-    if (backDate && !backAvail.has(backDate)) return setMsg("Fecha de regreso sin disponibilidad.");
+  if (!goDate || !isEnabled(goAvail, goDate, 'go')) return setMsg("Selecciona una fecha de ida disponible.");
+  if (backDate && !isEnabled(backAvail, backDate, 'back')) return setMsg("La fecha de regreso no tiene disponibilidad.");
     setL(true);
     try {
       await createRequest({
-        origin_id: originId,
-        destination_id: destId,
-        travel_date: goDate,
-        return_date: backDate || null,
+        origin_id: Number(originId),
+        destination_id: Number(destId),
+        travel_date: goDate.format("YYYY-MM-DD"),
+        return_date: backDate ? backDate.format("YYYY-MM-DD") : null,
       });
-      setMsg("Solicitud creada ✅");
+      setOk("Solicitud creada");
       setGoDate(null); setBackDate(null);
     } catch (err: any) {
       setMsg(err.message || "Error");
@@ -115,50 +95,86 @@ export default function NewRequestPage() {
     }
   }
 
+  const bounds = ymToBounds(ym);
+
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-semibold">Nueva Solicitud</h1>
-
-      <form onSubmit={onSubmit} className="space-y-4 max-w-3xl">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-sm mb-1">Origen</label>
-            <select className="border p-2 w-full" value={originId ?? ""} onChange={e=>setOriginId(e.target.value ? Number(e.target.value) : null)}>
-              <option value="">—</option>
-              {destinations.map(d => <option key={d.id} value={d.id}>{d.name} ({d.iata_code})</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Destino</label>
-            <select className="border p-2 w-full" value={destId ?? ""} onChange={e=>setDestId(e.target.value ? Number(e.target.value) : null)}>
-              <option value="">—</option>
+    <Box component="form" onSubmit={onSubmit}>
+      <Typography variant="h5" fontWeight={600} gutterBottom>Nueva Solicitud</Typography>
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+        gap: 2,
+      }}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="o-l">Origen</InputLabel>
+            <Select labelId="o-l" label="Origen" value={originId ?? ""} onChange={(e)=>setOriginId(e.target.value as any)}>
+              <MenuItem value=""><em>—</em></MenuItem>
+              {destinations.map(d => <MenuItem key={d.id} value={d.id}>{d.name} ({d.iata_code})</MenuItem>)}
+            </Select>
+          </FormControl>
+        <Box>
+          <FormControl fullWidth size="small">
+            <InputLabel id="d-l">Destino</InputLabel>
+            <Select labelId="d-l" label="Destino" value={destId ?? ""} onChange={(e)=>setDestId(e.target.value as any)}>
+              <MenuItem value=""><em>—</em></MenuItem>
               {destinations.filter(d => d.id !== originId).map(d => (
-                <option key={d.id} value={d.id}>{d.name} ({d.iata_code})</option>
+                <MenuItem key={d.id} value={d.id}>{d.name} ({d.iata_code})</MenuItem>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Mes</label>
-            <input type="month" className="border p-2 w-full" value={ym} onChange={e=>setYm(e.target.value)} min="2025-09" max="2025-09" />
-            <p className="text-xs text-gray-500 mt-1">Demo: septiembre 2025</p>
-          </div>
-        </div>
+            </Select>
+          </FormControl>
+        </Box>
+        <Box>
+          <TextField type="month" label="Mes" value={ym} onChange={(e)=>setYm(e.target.value)} inputProps={{ min: "2025-09", max: "2025-09" }} helperText="Demo: septiembre 2025" size="small" />
+        </Box>
+      </Box>
 
+      <Box sx={{ mt: 3 }}>
         {originIata && destIata ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <MonthGrid ym={ym} available={goAvail} value={goDate} onChange={setGoDate} label="Fecha de ida" />
-            <MonthGrid ym={ym} available={backAvail} value={backDate} onChange={setBackDate} label="Fecha de regreso (opcional)" />
-          </div>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>Fecha de ida</Typography>
+              <DateCalendar
+                value={goDate}
+                onChange={(d)=>setGoDate(d)}
+                views={["day"]}
+                minDate={bounds.start}
+                maxDate={bounds.end}
+                slots={{ day: (p) => {
+                  const d = p.day;
+                  const enabled = isEnabled(goAvail, d, 'go');
+                  return <PickersDay {...p} disabled={!enabled} />;
+                } }}
+              />
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>Fecha de regreso (opcional)</Typography>
+              <DateCalendar
+                value={backDate}
+                onChange={(d)=>setBackDate(d)}
+                views={["day"]}
+                minDate={bounds.start}
+                maxDate={bounds.end}
+                slots={{ day: (p) => {
+                  const d = p.day;
+                  const enabled = isEnabled(backAvail, d, 'back');
+                  return <PickersDay {...p} disabled={!enabled} />;
+                } }}
+              />
+            </Box>
+          </Box>
         ) : (
-          <p className="text-sm text-gray-600">Selecciona origen y destino para ver la disponibilidad.</p>
+          <Alert severity="info">Selecciona origen y destino para ver la disponibilidad.</Alert>
         )}
+      </Box>
 
-        {msg && <p className="text-sm">{msg}</p>}
-
-        <button className="bg-black text-white px-3 py-2 rounded" disabled={loading || !goDate || !originId || !destId}>
+      <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+        <Button type="submit" variant="contained" disabled={loading || !goDate || !originId || !destId}>
           {loading ? "Creando..." : "Crear solicitud"}
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Stack>
+
+      {msg && <Alert severity="error" sx={{ mt: 2 }}>{msg}</Alert>}
+      <Snackbar open={!!ok} onClose={()=>setOk(null)} autoHideDuration={2500} message={ok || ""} />
+    </Box>
   );
 }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FlightRequest } from '../flights/api';
-import { listRequests, patchRequestStatus } from '../flights/api';
+import { listRequests, reserveRequest } from '../flights/api';
 import { useAuth } from '../auth/AuthProvider';
+import { Box, Typography, Card, CardContent, Chip, Button, Stack } from '@mui/material';
 
 export default function OperatorPendingPage() {
   const { user } = useAuth();
@@ -19,36 +20,35 @@ export default function OperatorPendingPage() {
   useEffect(() => { load(); }, []);
 
   async function reserve(id: number) {
-    await patchRequestStatus(id, 'RESERVED');
+    await reserveRequest(id);
     await load();
   }
 
-  if (!user || !(user.is_staff || user.is_superuser)) return <div>No autorizado.</div>;
+  if (!user || !(user.is_staff || user.is_superuser)) return <Typography>No autorizado.</Typography>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">Operador · Pendientes</h1>
-      {loading ? <p>Cargando...</p> : (
-        <div className="space-y-2">
+    <Box>
+      <Typography variant="h5" fontWeight={600} gutterBottom>Operador · Pendientes</Typography>
+      {loading ? <Typography>Cargando...</Typography> : (
+        <Stack spacing={2}>
           {items.map(r => (
-            <div key={r.id} className="border rounded p-3 flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-600">
-                  #{r.id} · {r.owner.username} · {r.status}
-                </div>
-                <div className="font-medium">
-                  {r.origin.iata_code} → {r.destination.iata_code} · {r.travel_date}
-                  {r.return_date ? ` · regreso ${r.return_date}` : ""}
-                </div>
-              </div>
-              <button onClick={() => reserve(r.id)} className="px-3 py-2 bg-green-600 text-white rounded">
-                Marcar reservada
-              </button>
-            </div>
+            <Card key={r.id} variant="outlined">
+              <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">#{r.id} · {r.owner.username}</Typography>
+                  <Typography fontWeight={600}>{r.origin.iata_code} → {r.destination.iata_code}</Typography>
+                  <Typography variant="body2">Ida: {r.travel_date}{r.return_date ? ` · Regreso: ${r.return_date}` : ''}</Typography>
+                </Box>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Chip size="small" label={r.status} color="warning" />
+                  <Button variant="contained" color="success" size="large" onClick={() => reserve(r.id)}>Marcar reservada</Button>
+                </Stack>
+              </CardContent>
+            </Card>
           ))}
-          {items.length === 0 && <p className="text-sm text-gray-600">No hay pendientes.</p>}
-        </div>
+          {items.length === 0 && <Typography variant="body2" color="text.secondary">No hay pendientes.</Typography>}
+        </Stack>
       )}
-    </div>
+    </Box>
   );
 }

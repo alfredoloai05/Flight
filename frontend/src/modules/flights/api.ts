@@ -35,6 +35,10 @@ export function patchRequestStatus(id: number, status: "PENDING" | "RESERVED") {
   return http.patch(`/flight-requests/${id}/`, { status }) as Promise<FlightRequest>;
 }
 
+export function reserveRequest(id: number) {
+  return http.post(`/flight-requests/${id}/reserve/`) as Promise<FlightRequest>;
+}
+
 // Disponibilidad (YYYY-MM)
 export function getAvailabilityDates(originIata: string, destIata: string, ym: string) {
   const q = new URLSearchParams({ origin: originIata, destination: destIata, month: ym });

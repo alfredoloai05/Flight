@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { FlightRequest } from "./api";
 import { getRequest } from "./api";
+import { Box, Typography, Chip, Card, CardContent } from "@mui/material";
 
 export default function RequestDetailPage() {
   const { id } = useParams();
@@ -13,19 +14,21 @@ export default function RequestDetailPage() {
     getRequest(Number(id)).then(setItem).catch(e=>setErr(String(e)));
   }, [id]);
 
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
-  if (!item) return <div className="p-6">Cargando...</div>;
+  if (error) return <Typography color="error">{error}</Typography>;
+  if (!item) return <Typography>Cargando...</Typography>;
 
   return (
-    <div className="space-y-2">
-      <h1 className="text-2xl font-semibold">Solicitud #{item.id}</h1>
-      <div className="text-sm">Estado: {item.status}</div>
-      <div className="font-medium">
-        {item.origin.iata_code} → {item.destination.iata_code} · {item.travel_date}
-        {item.return_date ? ` · regreso ${item.return_date}` : ""}
-      </div>
-      <div className="text-sm text-gray-600">Dueño: {item.owner.username} · {item.owner.email}</div>
-      <div className="text-xs text-gray-500">Creado: {new Date(item.created_at).toLocaleString()}</div>
-    </div>
+    <Card variant="outlined">
+      <CardContent>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+          <Typography variant="h6">Solicitud #{item.id}</Typography>
+          <Chip label={item.status} color={item.status === 'RESERVED' ? 'success' : 'warning'} size="small" />
+        </Box>
+        <Typography fontWeight={600}>{item.origin.iata_code} → {item.destination.iata_code}</Typography>
+        <Typography variant="body2">Ida: {item.travel_date}{item.return_date ? ` · Regreso: ${item.return_date}` : ''}</Typography>
+        <Typography variant="body2" color="text.secondary" mt={1}>Dueño: {item.owner.username} · {item.owner.email}</Typography>
+        <Typography variant="caption" color="text.secondary">Creado: {new Date(item.created_at).toLocaleString()}</Typography>
+      </CardContent>
+    </Card>
   );
 }
