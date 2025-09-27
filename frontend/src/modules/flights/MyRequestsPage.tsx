@@ -1,28 +1,40 @@
-import { useMisSolicitudes } from './api';
-import { Box, Paper, Typography, Chip, Stack, Button } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import type { FlightRequest } from "./api";
+import { listRequests } from "./api";
 
 export default function MyRequestsPage() {
-  const { data } = useMisSolicitudes();
+  const [items, setItems] = useState<FlightRequest[]>([]);
+  const [filter, setFilter] = useState<"ALL"|"PENDING"|"RESERVED">("ALL");
+
+  useEffect(() => {
+    const status = filter === "ALL" ? undefined : filter;
+    listRequests(status).then(setItems).catch(console.error);
+  }, [filter]);
+
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>Mis solicitudes</Typography>
-      <Stack spacing={2}>
-        {(data ?? []).map((r) => (
-          <Paper key={r.id} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Typography fontWeight={600}>{r.destination.name}</Typography>
-              <Typography variant="body2">Fecha de viaje: {new Date(r.travel_date).toLocaleDateString()}</Typography>
+    <div>
+      <h1 className="text-2xl font-semibold mb-4">Mis Solicitudes</h1>
+      <div className="mb-3">
+        <select className="border p-2" value={filter} onChange={e=>setFilter(e.target.value as any)}>
+          <option value="ALL">Todas</option>
+          <option value="PENDING">Pendientes</option>
+          <option value="RESERVED">Reservadas</option>
+        </select>
+      </div>
+      <div className="space-y-2">
+        {items.map(r => (
+          <div key={r.id} className="border rounded p-3">
+            <div className="text-sm text-gray-600">#{r.id} · {r.status}</div>
+            <div className="font-medium">
+              {r.origin.iata_code} → {r.destination.iata_code} · {r.travel_date}
+              {r.return_date ? ` · regreso ${r.return_date}` : ""}
             </div>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Chip label={r.status === 'RESERVED' ? 'Reservada' : 'Pendiente'} color={r.status === 'RESERVED' ? 'success' : 'default'} />
-              <Button component={Link} to={`/flights/${r.id}`} variant="outlined">Detalle</Button>
-            </Stack>
-          </Paper>
+            <div className="text-xs text-gray-500">Creado: {new Date(r.created_at).toLocaleString()}</div>
+          </div>
         ))}
-        {(data?.length ?? 0) === 0 && <Typography variant="body2">Aún no tienes solicitudes.</Typography>}
-      </Stack>
-    </Box>
+        {items.length === 0 && <p className="text-sm text-gray-600">Sin resultados.</p>}
+      </div>
+    </div>
   );
 }
 

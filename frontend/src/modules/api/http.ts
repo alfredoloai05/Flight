@@ -1,34 +1,38 @@
-import axios from 'axios';
+// Cliente HTTP minimal con manejo de JWT y JSON (fetch)
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api';
-export const http = axios.create({ baseURL });
+let accessToken: string | null = localStorage.getItem("accessToken");
 
-http.interceptors.request.use((config) => {
-  const access = localStorage.getItem('access');
-  if (access) config.headers.Authorization = `Bearer ${access}`;
-  return config;
-});
+export function setAccessToken(t: string | null) {
+  accessToken = t;
+  if (t) localStorage.setItem("accessToken", t);
+  else localStorage.removeItem("accessToken");
+}
 
-http.interceptors.response.use(
-  (r) => r,
-  async (error) => {
-    if (error?.response?.status === 401) {
-      const refresh = localStorage.getItem('refresh');
-      if (refresh) {
-        try {
-          const res = await axios.post(`${baseURL}/auth/refresh/`, { refresh });
-          localStorage.setItem('access', res.data.access);
-          error.config.headers.Authorization = `Bearer ${res.data.access}`;
-          return http.request(error.config);
-        } catch {
-          localStorage.removeItem('access');
-          localStorage.removeItem('refresh');
-          window.location.href = '/login';
-        }
-      } else {
-        window.location.href = '/login';
-      }
+async function request(path: string, opts: RequestInit = {}) {
+  const headers = new Headers(opts.headers || {});
+  headers.set("Accept", "application/json");
+  if (!(opts.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+  const res = await fetch(`${API}${path}`, { ...opts, headers });
+  if (!res.ok) {
+    const text = await res.text();
+    try {
+      const j = JSON.parse(text);
+      throw new Error(j.detail ?? JSON.stringify(j));
+    } catch {
+      throw new Error(text || `${res.status} ${res.statusText}`);
     }
-    return Promise.reject(error);
   }
-);
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+export const http = {
+  get: (p: string) => request(p),
+  post: (p: string, body?: any) => request(p, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
+  patch: (p: string, body?: any) => request(p, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
+};
+
+export { API };

@@ -1,16 +1,15 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { CircularProgress, Box } from '@mui/material';
 import { useAuth } from './AuthProvider';
 
-export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <Box sx={{ height: '100vh', display: 'grid', placeItems: 'center' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-};
+  if (loading) return <div className="p-6">Cargando...</div>;
+  return user ? children : <Navigate to="/login" replace />;
+}
+
+export function OperatorRoute({ children }: { children: React.ReactElement }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="p-6">Cargando...</div>;
+  return user && (user.is_staff || user.is_superuser) ? children : <Navigate to="/" replace />;
+}

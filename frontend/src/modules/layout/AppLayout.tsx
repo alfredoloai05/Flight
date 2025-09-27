@@ -1,45 +1,32 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Box, Button, Stack } from '@mui/material';
+import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 
-export const AppLayout = () => {
-  const { user, logout, hasRole } = useAuth();
-  const loc = useLocation();
+export default function AppLayout() {
+  const { user, logout } = useAuth();
   return (
-    <Box>
-      <AppBar position="sticky">
-        <Toolbar sx={{ gap: 2 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Flight Requests</Typography>
-          <Stack direction="row" spacing={1}>
-            {!hasRole('admin') && (
-              <>
-                <Button color={loc.pathname === '/flights/new' ? 'secondary' : 'inherit'} component={Link} to="/flights/new">
-                  Solicitar vuelo
-                </Button>
-                <Button color={loc.pathname.startsWith('/flights/mine') ? 'secondary' : 'inherit'} component={Link} to="/flights/mine">
-                  Mis solicitudes
-                </Button>
-              </>
-            )}
-
-            {hasRole('operator') && (
-              <Button color={loc.pathname.startsWith('/operator/pending') ? 'secondary' : 'inherit'} component={Link} to="/operator/pending">
-                Pendientes
-              </Button>
-            )}
-
-            {hasRole('admin') && (
-              <Button color={loc.pathname.startsWith('/admin/destinations') ? 'secondary' : 'inherit'} component={Link} to="/admin/destinations">
-                Destinos
-              </Button>
-            )}
-          </Stack>
-
-          <Typography sx={{ mx: 2 }}>{user?.username}</Typography>
-          <Button onClick={logout} color="inherit">Salir</Button>
-        </Toolbar>
-      </AppBar>
-      <Box sx={{ p: 3 }}><Outlet /></Box>
-    </Box>
+    <div className="min-h-dvh flex flex-col">
+      <header className="border-b">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <nav className="flex items-center gap-4">
+            <Link to="/" className="font-semibold">Flights</Link>
+            <Link to="/requests" className="text-sm">Mis solicitudes</Link>
+            <Link to="/new" className="text-sm">Nueva</Link>
+            {user?.is_staff && <Link to="/operator" className="text-sm">Operador</Link>}
+          </nav>
+          <div className="text-sm">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span>{user.username}</span>
+                <button onClick={logout} className="text-blue-600">Salir</button>
+              </div>
+            ) : <Link to="/login" className="text-blue-600">Ingresar</Link>}
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-6">
+        <Outlet />
+      </main>
+      <footer className="border-t py-3 text-center text-xs text-gray-500">Demo · Django + React</footer>
+    </div>
   );
-};
+}

@@ -1,49 +1,40 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { Box, Paper, Typography, TextField, Button, Stack } from '@mui/material';
 
-export const Login = () => {
+export default function Login() {
+  const nav = useNavigate();
   const { login } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [error, setError] = useState<string | null>(null);
+  const [username, setU] = useState('agloaiza');
+  const [password, setP] = useState('Clave123');
+  const [error, setE] = useState<string | null>(null);
+  const [loading, setL] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setE(null); setL(true);
     try {
-      await login(form.username, form.password);
-      window.location.href = '/';
+      await login(username, password);
+      nav('/new');
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? 'Credenciales inválidas');
+      setE(err.message || 'Error');
     } finally {
-      setLoading(false);
+      setL(false);
     }
-  };
+  }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-      <Paper sx={{ p: 4, width: 380 }}>
-        <Typography variant="h6" gutterBottom>Iniciar sesión</Typography>
-        <form onSubmit={onSubmit}>
-          <Stack spacing={2}>
-            <TextField
-              label="Usuario"
-              value={form.username}
-              onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-            />
-            <TextField
-              label="Contraseña"
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            />
-            {error && <Typography color="error">{error}</Typography>}
-            <Button type="submit" disabled={loading}>Entrar</Button>
-          </Stack>
-        </form>
-      </Paper>
-    </Box>
+    <div className="p-6 max-w-sm mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">Ingresar</h1>
+      <form onSubmit={onSubmit} className="space-y-3">
+        <input className="border p-2 w-full" placeholder="Usuario" value={username} onChange={e=>setU(e.target.value)} />
+        <input className="border p-2 w-full" type="password" placeholder="Clave" value={password} onChange={e=>setP(e.target.value)} />
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <button className="bg-black text-white px-3 py-2 rounded w-full" disabled={loading}>
+          {loading ? '...' : 'Entrar'}
+        </button>
+      </form>
+      <p className="text-xs text-gray-500 mt-3">Demo: admin/Clave123 o agloaiza/Clave123</p>
+    </div>
   );
-};
+}
