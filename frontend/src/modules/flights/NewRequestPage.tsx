@@ -13,6 +13,8 @@ import {
   TextField,
   Stack,
   Snackbar,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import { DateCalendar, PickersDay } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -32,12 +34,13 @@ export default function NewRequestPage() {
   const originIata = useMemo(() => destinations.find(d => d.id === originId)?.iata_code || "", [destinations, originId]);
   const destIata = useMemo(() => destinations.find(d => d.id === destId)?.iata_code || "", [destinations, destId]);
 
-  const [ym, setYm] = useState("2025-09");
+  const [ym, setYm] = useState("2025-10");
 
   const [goAvail, setGoAvail] = useState<Set<string>>(new Set());
   const [backAvail, setBackAvail] = useState<Set<string>>(new Set());
   const [goDate, setGoDate] = useState<Dayjs | null>(null);
   const [backDate, setBackDate] = useState<Dayjs | null>(null);
+  const [oneWay, setOneWay] = useState(true);
 
   const [msg, setMsg] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
@@ -75,19 +78,20 @@ export default function NewRequestPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null); setOk(null);
-    if (!originId || !destId) return setMsg("Selecciona origen y destino.");
+  if (!originId || !destId) return setMsg("Selecciona origen y destino.");
   if (!goDate || !isEnabled(goAvail, goDate, 'go')) return setMsg("Selecciona una fecha de ida disponible.");
-  if (backDate && !isEnabled(backAvail, backDate, 'back')) return setMsg("La fecha de regreso no tiene disponibilidad.");
+  if (!oneWay && backDate && !isEnabled(backAvail, backDate, 'back')) return setMsg("La fecha de regreso no tiene disponibilidad.");
     setL(true);
     try {
       await createRequest({
         origin_id: Number(originId),
         destination_id: Number(destId),
         travel_date: goDate.format("YYYY-MM-DD"),
-        return_date: backDate ? backDate.format("YYYY-MM-DD") : null,
+        return_date: !oneWay && backDate ? backDate.format("YYYY-MM-DD") : null,
       });
       setOk("Solicitud creada");
       setGoDate(null); setBackDate(null);
+      setOneWay(true);
     } catch (err: any) {
       setMsg(err.message || "Error");
     } finally {
@@ -124,7 +128,7 @@ export default function NewRequestPage() {
           </FormControl>
         </Box>
         <Box>
-          <TextField type="month" label="Mes" value={ym} onChange={(e)=>setYm(e.target.value)} inputProps={{ min: "2025-09", max: "2025-09" }} helperText="Demo: septiembre 2025" size="small" />
+          <TextField type="month" label="Mes" value={ym} onChange={(e)=>setYm(e.target.value)} inputProps={{ min: "2025-10", max: "2025-10" }} helperText="Demo: octubre 2025" size="small" />
         </Box>
       </Box>
 
@@ -147,7 +151,10 @@ export default function NewRequestPage() {
               />
             </Box>
             <Box>
-              <Typography variant="subtitle1" gutterBottom>Fecha de regreso (opcional)</Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography variant="subtitle1">Fecha de regreso</Typography>
+                <FormControlLabel control={<Switch checked={oneWay} onChange={e=>{ setOneWay(e.target.checked); if (e.target.checked) setBackDate(null); }} />} label="Sólo ida" />
+              </Stack>
               <DateCalendar
                 value={backDate}
                 onChange={(d)=>setBackDate(d)}
@@ -156,7 +163,7 @@ export default function NewRequestPage() {
                 maxDate={bounds.end}
                 slots={{ day: (p) => {
                   const d = p.day;
-                  const enabled = isEnabled(backAvail, d, 'back');
+                  const enabled = !oneWay && isEnabled(backAvail, d, 'back');
                   return <PickersDay {...p} disabled={!enabled} />;
                 } }}
               />

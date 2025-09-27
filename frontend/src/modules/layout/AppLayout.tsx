@@ -19,7 +19,7 @@ import SidebarNav, { useDrawerWidth } from './SidebarNav';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 export default function AppLayout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const drawerWidth = useDrawerWidth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openInfo, setOpenInfo] = useState(false);
@@ -30,7 +30,7 @@ export default function AppLayout() {
 
   return (
     <Box sx={{ minHeight: '100%', display: 'flex' }}>
-      <AppBar position="fixed" color="default" elevation={0} sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
+      <AppBar position="fixed" color="primary" elevation={0} sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
         <Toolbar sx={{ gap: 2 }}>
           <Typography variant="h6" component={Link} to="/new" sx={{ textDecoration: 'none', color: 'inherit' }}>
             Flights
@@ -38,6 +38,7 @@ export default function AppLayout() {
           <Box sx={{ flex: 1 }} />
           {user ? (
             <>
+              <Typography variant="body2" sx={{ mr: 1, color: 'inherit' }}>{user.username}</Typography>
               <IconButton color="inherit" onClick={handleMenu} size="small">
                 <Avatar alt={user.username} sx={{ width: 32, height: 32 }} />
               </IconButton>
@@ -45,11 +46,11 @@ export default function AppLayout() {
                 <MenuItem onClick={() => { setOpenInfo(true); handleClose(); }}>
                   <SettingsIcon fontSize="small" style={{ marginRight: 8 }} /> Cambiar clave
                 </MenuItem>
-                <MenuItem onClick={() => { setOpenInfo(true); handleClose(); }}>Salir</MenuItem>
+                <MenuItem onClick={() => { handleClose(); logout(); }}>Salir</MenuItem>
               </Menu>
             </>
           ) : (
-            <Button component={Link} to="/login" color="primary">Ingresar</Button>
+            <Button component={Link} to="/login" variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.6)' }}>Ingresar</Button>
           )}
         </Toolbar>
       </AppBar>

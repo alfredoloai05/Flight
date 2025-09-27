@@ -19,9 +19,9 @@ export default function SidebarNav() {
   const { user } = useAuth();
   const { pathname } = useLocation();
   const items = useMemo(() => [
-    { to: '/new', icon: <FlightTakeoffIcon />, label: 'Nueva' },
+    { to: '/new', icon: <FlightTakeoffIcon />, label: 'Cotizar vuelo' },
     { to: '/requests', icon: <ListAltIcon />, label: 'Mis solicitudes' },
-    ...(user?.is_staff ? [{ to: '/operator', icon: <DashboardIcon />, label: 'Operador' }] : []),
+    ...((user?.is_staff || user?.is_superuser) ? [{ to: '/operator', icon: <DashboardIcon />, label: 'Operador' }] : []),
   ], [user]);
 
   return (
@@ -30,13 +30,21 @@ export default function SidebarNav() {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', backgroundColor: '#f0f5f7' },
       }}
     >
       <List>
         {items.map(it => (
           <ListItem key={it.to} disablePadding>
-            <ListItemButton component={Link} to={it.to} selected={pathname.startsWith(it.to)}>
+            <ListItemButton component={Link} to={it.to} selected={pathname.startsWith(it.to)}
+              sx={(t)=>({
+                borderRadius: 1,
+                mx: 1,
+                '&.Mui-selected': { backgroundColor: t.palette.primary.main, color: t.palette.primary.contrastText,
+                  '& .MuiListItemIcon-root': { color: t.palette.primary.contrastText }
+                }
+              })}
+            >
               <ListItemIcon>{it.icon}</ListItemIcon>
               <ListItemText primary={it.label} />
             </ListItemButton>

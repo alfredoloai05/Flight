@@ -11,7 +11,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING("-> Sembrando destinos..."))
         call_command("seed_destinations")
         
-        self.stdout.write(self.style.WARNING("-> Sembrando disponibilidad"))
-        call_command("seed_availability", year=2025, month=9, reset=True)
+        self.stdout.write(self.style.WARNING("-> Sembrando disponibilidad (octubre)"))
+        call_command("seed_availability", year=2025, month=10, reset=True)
 
         self.stdout.write(self.style.SUCCESS("Bootstrap OK ✅"))

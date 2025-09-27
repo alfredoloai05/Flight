@@ -78,6 +78,20 @@ class FlightRequestViewSet(viewsets.ModelViewSet):
         ser = FlightRequestListSerializer(instance)
         return Response(ser.data)
 
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def reserve(self, request, pk=None):
+        """
+        POST /api/flight-requests/{id}/reserve/
+        Sólo operador/admin: cambia estado a RESERVED.
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"detail": "No autorizado."}, status=403)
+        instance = self.get_object()
+        instance.status = FlightRequest.Status.RESERVED
+        instance.save()
+        ser = FlightRequestListSerializer(instance)
+        return Response(ser.data)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

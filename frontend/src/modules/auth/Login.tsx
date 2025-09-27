@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Alert from '@mui/material/Alert';
 
 export default function Login() {
   const nav = useNavigate();
   const { login } = useAuth();
   const [username, setU] = useState('agloaiza');
   const [password, setP] = useState('Clave123');
+  const [show, setShow] = useState(false);
   const [error, setE] = useState<string | null>(null);
   const [loading, setL] = useState(false);
 
@@ -14,27 +26,44 @@ export default function Login() {
     e.preventDefault();
     setE(null); setL(true);
     try {
-      await login(username, password);
+      await login(username.trim(), password);
       nav('/new');
     } catch (err: any) {
-      setE(err.message || 'Error');
+      setE(err.message || 'Error al ingresar');
     } finally {
       setL(false);
     }
   }
 
   return (
-    <div className="p-6 max-w-sm mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Ingresar</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input className="border p-2 w-full" placeholder="Usuario" value={username} onChange={e=>setU(e.target.value)} />
-        <input className="border p-2 w-full" type="password" placeholder="Clave" value={password} onChange={e=>setP(e.target.value)} />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button className="bg-black text-white px-3 py-2 rounded w-full" disabled={loading}>
-          {loading ? '...' : 'Entrar'}
-        </button>
-      </form>
-      <p className="text-xs text-gray-500 mt-3">Demo: admin/Clave123 o agloaiza/Clave123</p>
-    </div>
+    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2, background: (t)=>t.palette.background.default }}>
+      <Card sx={{ width: 380, p: 1 }} elevation={3}>
+        <CardContent>
+          <Typography variant="h5" fontWeight={600} gutterBottom color="primary">Ingresar</Typography>
+          <Box component="form" onSubmit={onSubmit} sx={{ display: 'grid', gap: 2, mt: 1 }}>
+            <TextField label="Usuario" value={username} onChange={e=>setU(e.target.value)} autoFocus required />
+            <TextField
+              label="Clave"
+              type={show ? 'text' : 'password'}
+              value={password}
+              onChange={e=>setP(e.target.value)}
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton aria-label="mostrar u ocultar clave" onClick={()=>setShow(s=>!s)} edge="end">
+                      {show ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+            {error && <Alert severity="error">{error}</Alert>}
+            <Button type="submit" disabled={loading} size="large">{loading ? 'Ingresando…' : 'Entrar'}</Button>
+            <Typography variant="caption" color="text.secondary">Demo: admin/Clave123 o agloaiza/Clave123</Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
