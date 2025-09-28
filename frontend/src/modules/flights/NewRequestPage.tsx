@@ -137,6 +137,9 @@ export default function NewRequestPage() {
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
             <Box>
               <Typography variant="subtitle1" gutterBottom>Fecha de ida</Typography>
+              {goAvail.size === 0 ? (
+                <Alert severity="warning">La aerolínea no tiene vuelos disponibles entre estos destinos para el mes seleccionado.</Alert>
+              ) : (
               <DateCalendar
                 value={goDate}
                 onChange={(d)=>setGoDate(d)}
@@ -148,13 +151,18 @@ export default function NewRequestPage() {
                   const enabled = isEnabled(goAvail, d, 'go');
                   return <PickersDay {...p} disabled={!enabled} />;
                 } }}
-              />
+              />)}
             </Box>
             <Box>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="subtitle1">Fecha de regreso</Typography>
                 <FormControlLabel control={<Switch checked={oneWay} onChange={e=>{ setOneWay(e.target.checked); if (e.target.checked) setBackDate(null); }} />} label="Sólo ida" />
               </Stack>
+              {oneWay ? (
+                <Alert severity="info">Sólo ida activado.</Alert>
+              ) : backAvail.size === 0 ? (
+                <Alert severity="warning">No hay disponibilidad para el regreso en el mes seleccionado.</Alert>
+              ) : (
               <DateCalendar
                 value={backDate}
                 onChange={(d)=>setBackDate(d)}
@@ -166,7 +174,7 @@ export default function NewRequestPage() {
                   const enabled = !oneWay && isEnabled(backAvail, d, 'back');
                   return <PickersDay {...p} disabled={!enabled} />;
                 } }}
-              />
+              />)}
             </Box>
           </Box>
         ) : (

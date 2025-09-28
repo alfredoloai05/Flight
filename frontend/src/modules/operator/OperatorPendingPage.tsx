@@ -35,7 +35,7 @@ export default function OperatorPendingPage() {
             <Card key={r.id} variant="outlined">
               <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="body2" color="text.secondary">#{r.id} · {r.owner.username}</Typography>
+                  <Typography variant="body2" color="text.secondary">#{r.id} · {r.owner.first_name ? `${r.owner.first_name} ${r.owner.last_name}` : r.owner.username}</Typography>
                   <Typography fontWeight={600}>{r.origin.iata_code} → {r.destination.iata_code}</Typography>
                   <Typography variant="body2">Ida: {r.travel_date}{r.return_date ? ` · Regreso: ${r.return_date}` : ''}</Typography>
                 </Box>

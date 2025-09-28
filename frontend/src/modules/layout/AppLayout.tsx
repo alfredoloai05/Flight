@@ -17,6 +17,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useLocation } from 'react-router-dom';
+import FlightIcon from '@mui/icons-material/Flight';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -32,9 +33,10 @@ export default function AppLayout() {
     <Box sx={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="fixed" color="primary" elevation={0} sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
         <Toolbar sx={{ gap: 2 }}>
-          <Typography variant="h6" component={Link} to="/new" sx={{ textDecoration: 'none', color: 'inherit' }}>
-            Flights
-          </Typography>
+          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'inherit' }}>
+            <FlightIcon />
+            <Typography variant="h6">Flights</Typography>
+          </Box>
           {user && (
             <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
               {!(user.is_staff || user.is_superuser) ? (
@@ -49,7 +51,7 @@ export default function AppLayout() {
               ) : (
                 <>
                   <Button component={Link} to="/operator" color="inherit" variant={pathname.startsWith('/operator') ? 'outlined' : 'text'} sx={{ borderColor: 'rgba(255,255,255,0.6)' }}>
-                    Operador
+                    Gestión de reservas
                   </Button>
                   <Button component={Link} to="/destinations" color="inherit" variant={pathname.startsWith('/destinations') ? 'outlined' : 'text'} sx={{ borderColor: 'rgba(255,255,255,0.6)' }}>
                     Destinos
@@ -61,9 +63,18 @@ export default function AppLayout() {
           <Box sx={{ flex: 1 }} />
           {user ? (
             <>
-              <Typography variant="body2" sx={{ mr: 1, color: 'inherit' }}>{user.username}</Typography>
+              <Typography variant="body2" sx={{ mr: 1, color: 'inherit' }}>
+                {user.first_name ? `${user.first_name} ${user.last_name}` : user.username}
+              </Typography>
               <IconButton color="inherit" onClick={handleMenu} size="small">
-                <Avatar alt={user.username} sx={{ width: 32, height: 32 }} />
+                <Avatar alt={user.first_name ? `${user.first_name} ${user.last_name}` : user.username} sx={{ width: 32, height: 32, bgcolor: 'secondary.main', color: 'secondary.contrastText', fontSize: 14 }}>
+                  {(() => {
+                    const n = user.first_name ? `${user.first_name} ${user.last_name}` : user.username;
+                    const parts = n.trim().split(/\s+/);
+                    const initials = parts.length >= 2 ? (parts[0][0] + parts[1][0]) : n.slice(0, 2);
+                    return initials.toUpperCase();
+                  })()}
+                </Avatar>
               </IconButton>
               <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
                 <MenuItem onClick={() => { setOpenInfo(true); handleClose(); }}>

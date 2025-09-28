@@ -8,8 +8,11 @@ class MeView(APIView):
     def get(self, request):
         u = request.user
         return Response({
+            "id": u.id,
             "username": u.username,
             "email": u.email,
+            "first_name": getattr(u, "first_name", ""),
+            "last_name": getattr(u, "last_name", ""),
             "is_staff": u.is_staff,
             "is_superuser": u.is_superuser,
         })

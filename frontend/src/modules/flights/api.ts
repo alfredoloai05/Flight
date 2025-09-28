@@ -3,7 +3,7 @@ import type { Destination } from "../destinations/api";
 
 export type FlightRequest = {
   id: number;
-  owner: { id: number; username: string; email: string };
+  owner: { id: number; username: string; email: string; first_name?: string; last_name?: string };
   origin: Destination;
   destination: Destination;
   travel_date: string;

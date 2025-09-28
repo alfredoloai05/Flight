@@ -47,4 +47,11 @@ class FlightRequestListSerializer(serializers.ModelSerializer):
         ]
 
     def get_owner(self, obj):
-        return {"id": obj.owner.id, "username": obj.owner.username, "email": obj.owner.email}
+        u = obj.owner
+        return {
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "first_name": getattr(u, "first_name", ""),
+            "last_name": getattr(u, "last_name", ""),
+        }

@@ -26,7 +26,9 @@ export default function RequestDetailPage() {
         </Box>
         <Typography fontWeight={600}>{item.origin.iata_code} → {item.destination.iata_code}</Typography>
         <Typography variant="body2">Ida: {item.travel_date}{item.return_date ? ` · Regreso: ${item.return_date}` : ''}</Typography>
-        <Typography variant="body2" color="text.secondary" mt={1}>Dueño: {item.owner.username} · {item.owner.email}</Typography>
+        <Typography variant="body2" color="text.secondary" mt={1}>
+          Dueño: {item.owner.first_name ? `${item.owner.first_name} ${item.owner.last_name}` : item.owner.username} · {item.owner.email}
+        </Typography>
         <Typography variant="caption" color="text.secondary">Creado: {new Date(item.created_at).toLocaleString()}</Typography>
       </CardContent>
     </Card>

@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { AuthProvider } from "./modules/auth/AuthProvider";
 import Login from "./modules/auth/Login";
-import { ProtectedRoute, OperatorRoute } from "./modules/auth/ProtectedRoute";
+import { ProtectedRoute, OperatorRoute, EndUserRoute } from "./modules/auth/ProtectedRoute";
 import AppLayout from "./modules/layout/AppLayout";
 import Welcome from "./modules/layout/Welcome";
 import NewRequestPage from "./modules/flights/NewRequestPage";
@@ -24,8 +24,8 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <ProtectedRoute><Welcome /></ProtectedRoute> },
-      { path: "new", element: <ProtectedRoute><NewRequestPage /></ProtectedRoute> },
-      { path: "requests", element: <ProtectedRoute><MyRequestsPage /></ProtectedRoute> },
+  { path: "new", element: <EndUserRoute><NewRequestPage /></EndUserRoute> },
+  { path: "requests", element: <EndUserRoute><MyRequestsPage /></EndUserRoute> },
       { path: "requests/:id", element: <ProtectedRoute><RequestDetailPage /></ProtectedRoute> },
       { path: "operator", element: <OperatorRoute><OperatorPendingPage /></OperatorRoute> },
       { path: "destinations", element: <OperatorRoute><DestinationsCrudPage /></OperatorRoute> },
