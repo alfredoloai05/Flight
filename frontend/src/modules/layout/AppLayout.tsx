@@ -15,26 +15,49 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import SidebarNav, { useDrawerWidth } from './SidebarNav';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { useLocation } from 'react-router-dom';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
-  const drawerWidth = useDrawerWidth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openInfo, setOpenInfo] = useState(false);
+  const { pathname } = useLocation();
 
   const open = Boolean(anchorEl);
   const handleMenu = (event: React.MouseEvent<HTMLButtonElement>) => { setAnchorEl(event.currentTarget); };
   const handleClose = () => setAnchorEl(null);
 
   return (
-    <Box sx={{ minHeight: '100%', display: 'flex' }}>
+    <Box sx={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="fixed" color="primary" elevation={0} sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
         <Toolbar sx={{ gap: 2 }}>
           <Typography variant="h6" component={Link} to="/new" sx={{ textDecoration: 'none', color: 'inherit' }}>
             Flights
           </Typography>
+          {user && (
+            <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+              {!(user.is_staff || user.is_superuser) ? (
+                <>
+                  <Button component={Link} to="/new" color="inherit" variant={pathname.startsWith('/new') ? 'outlined' : 'text'} sx={{ borderColor: 'rgba(255,255,255,0.6)' }}>
+                    Cotizar vuelo
+                  </Button>
+                  <Button component={Link} to="/requests" color="inherit" variant={pathname.startsWith('/requests') ? 'outlined' : 'text'} sx={{ borderColor: 'rgba(255,255,255,0.6)' }}>
+                    Mis solicitudes
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button component={Link} to="/operator" color="inherit" variant={pathname.startsWith('/operator') ? 'outlined' : 'text'} sx={{ borderColor: 'rgba(255,255,255,0.6)' }}>
+                    Operador
+                  </Button>
+                  <Button component={Link} to="/destinations" color="inherit" variant={pathname.startsWith('/destinations') ? 'outlined' : 'text'} sx={{ borderColor: 'rgba(255,255,255,0.6)' }}>
+                    Destinos
+                  </Button>
+                </>
+              )}
+            </Box>
+          )}
           <Box sx={{ flex: 1 }} />
           {user ? (
             <>
@@ -54,10 +77,7 @@ export default function AppLayout() {
           )}
         </Toolbar>
       </AppBar>
-
-      <SidebarNav />
-
-      <Box component="main" sx={{ flex: 1, p: 3, ml: `${drawerWidth}px`, mt: '64px' }}>
+      <Box component="main" sx={{ flex: 1, p: 3, mt: '64px' }}>
         <Container maxWidth="md" sx={{ py: 2 }}>
           <Outlet />
         </Container>

@@ -15,6 +15,7 @@ import { useAuth } from '../auth/AuthProvider';
 const drawerWidth = 240;
 export function useDrawerWidth() { return drawerWidth; }
 
+// Sidebar antiguo (no se usa por ahora)
 export default function SidebarNav() {
   const { user } = useAuth();
   const { pathname } = useLocation();
